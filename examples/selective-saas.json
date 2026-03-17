@@ -1,0 +1,148 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "DevDocs Pro",
+    "url": "https://devdocs.example.com",
+    "contact": "mailto:ai-policy@devdocs.example.com",
+    "jurisdictions": [
+      "US"
+    ]
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "deny",
+      "unknown_identity": "deny"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "deny"
+      },
+      "ai-input": {
+        "state": "conditional",
+        "conditions": {
+          "identity": "verified",
+          "citation_required": true,
+          "link_required": true,
+          "max_excerpt_chars": 300,
+          "max_tokens": 500,
+          "rate_limit_per_day": 5000
+        }
+      },
+      "agentic-access": {
+        "state": "conditional",
+        "conditions": {
+          "identity": "signed",
+          "rate_limit_per_day": 500
+        }
+      },
+      "transform": {
+        "state": "conditional",
+        "conditions": {
+          "attribution_required": true,
+          "max_excerpt_chars": 200
+        }
+      },
+      "embedding": {
+        "state": "allow"
+      },
+      "generate-media": {
+        "state": "deny"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/docs/public/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "conditional",
+          "conditions": {
+            "attribution_required": true
+          }
+        },
+        "search": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "allow"
+        },
+        "embedding": {
+          "state": "allow"
+        },
+        "transform": {
+          "state": "allow"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/docs/enterprise/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        },
+        "search": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "charge",
+          "conditions": {
+            "identity": "signed",
+            "payment_plan": "enterprise-rag",
+            "citation_required": true,
+            "max_tokens": 200
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/api-reference/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        },
+        "search": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "allow"
+        },
+        "embedding": {
+          "state": "allow"
+        }
+      }
+    }
+  ],
+  "endpoints": {
+    "payment": "https://devdocs.example.com/.well-known/ai-payment",
+    "verification": "https://devdocs.example.com/.well-known/http-message-signatures-directory"
+  },
+  "interop": {
+    "emit": [
+      "robots-txt",
+      "aipref-header",
+      "aipref-robots",
+      "x-robots-tag",
+      "google-extended"
+    ]
+  }
+}

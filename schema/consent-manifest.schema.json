@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/GGeronik/consent.txt/main/schema/consent-manifest.schema.json",
+  "title": "Consent Manifest v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "publisher",
+    "defaults"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "publisher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "contact"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "contact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "jurisdictions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "terms_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "defaults": {
+      "$ref": "#/$defs/policyBlock"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "match"
+        ],
+        "properties": {
+          "match": {
+            "$ref": "#/$defs/match"
+          },
+          "standard": {
+            "$ref": "#/$defs/standardPolicies"
+          },
+          "experimental": {
+            "$ref": "#/$defs/experimentalPolicies"
+          }
+        }
+      }
+    },
+    "endpoints": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "interop": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "emit": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "signature": {
+      "type": "object"
+    },
+    "extensions": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "state": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "deny",
+        "unknown",
+        "charge",
+        "conditional"
+      ]
+    },
+    "conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "identity": {
+          "type": "string",
+          "enum": [
+            "none",
+            "verified",
+            "signed"
+          ]
+        },
+        "citation_required": {
+          "type": "boolean"
+        },
+        "link_required": {
+          "type": "boolean"
+        },
+        "attribution_required": {
+          "type": "boolean"
+        },
+        "max_excerpt_chars": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verbatim_allowed": {
+          "type": "boolean"
+        },
+        "freshness_delay_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rate_limit_per_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "region_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "payment_plan": {
+          "type": "string"
+        }
+      }
+    },
+    "policyValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/state"
+        },
+        "conditions": {
+          "$ref": "#/$defs/conditions"
+        }
+      }
+    },
+    "fallbacks": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unexpressible_state": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny",
+            "unknown"
+          ]
+        },
+        "unknown_identity": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "standardPolicies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "train-ai": {
+          "$ref": "#/$defs/policyValue"
+        },
+        "search": {
+          "$ref": "#/$defs/policyValue"
+        }
+      }
+    },
+    "experimentalPolicies": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/policyValue"
+      }
+    },
+    "policyBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fallbacks": {
+          "$ref": "#/$defs/fallbacks"
+        },
+        "standard": {
+          "$ref": "#/$defs/standardPolicies"
+        },
+        "experimental": {
+          "$ref": "#/$defs/experimentalPolicies"
+        }
+      }
+    },
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "content_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

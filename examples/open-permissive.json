@@ -1,0 +1,58 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "OpenData Research Lab",
+    "url": "https://opendata.example.edu",
+    "contact": "mailto:data@example.edu",
+    "jurisdictions": [
+      "US"
+    ],
+    "terms_url": "https://opendata.example.edu/terms"
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "allow",
+      "unknown_identity": "allow"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "conditional",
+        "conditions": {
+          "attribution_required": true
+        }
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "conditional",
+        "conditions": {
+          "attribution_required": true
+        }
+      },
+      "ai-input": {
+        "state": "allow"
+      },
+      "embedding": {
+        "state": "allow"
+      },
+      "transform": {
+        "state": "conditional",
+        "conditions": {
+          "attribution_required": true
+        }
+      },
+      "agentic-access": {
+        "state": "allow"
+      }
+    }
+  },
+  "interop": {
+    "emit": [
+      "robots-txt",
+      "aipref-header"
+    ]
+  }
+}

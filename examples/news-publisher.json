@@ -1,0 +1,133 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Example Media Group",
+    "url": "https://example.com",
+    "contact": "mailto:ai-policy@example.com",
+    "jurisdictions": [
+      "GB",
+      "EU"
+    ],
+    "terms_url": "https://example.com/ai-policy"
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "deny",
+      "unknown_identity": "deny"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "deny"
+      },
+      "ai-input": {
+        "state": "conditional",
+        "conditions": {
+          "identity": "signed",
+          "citation_required": true,
+          "link_required": true,
+          "max_excerpt_chars": 160,
+          "max_tokens": 500
+        }
+      },
+      "agentic-access": {
+        "state": "conditional",
+        "conditions": {
+          "identity": "signed",
+          "rate_limit_per_day": 1000
+        }
+      },
+      "transform": {
+        "state": "deny"
+      },
+      "generate-media": {
+        "state": "deny"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/premium/*",
+        "content_types": [
+          "text/html",
+          "application/pdf"
+        ]
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        },
+        "search": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "train-genai": {
+          "state": "deny"
+        },
+        "ai-input": {
+          "state": "charge",
+          "conditions": {
+            "identity": "signed",
+            "citation_required": true,
+            "link_required": true,
+            "max_excerpt_chars": 120,
+            "max_tokens": 200,
+            "payment_plan": "premium-rag"
+          }
+        },
+        "transform": {
+          "state": "deny"
+        },
+        "generate-media": {
+          "state": "deny"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/press-releases/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        },
+        "search": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "train-genai": {
+          "state": "deny"
+        },
+        "ai-input": {
+          "state": "allow"
+        }
+      }
+    }
+  ],
+  "endpoints": {
+    "payment": "https://example.com/.well-known/ai-payment",
+    "receipts": "https://example.com/.well-known/ai-receipts",
+    "verification": "https://example.com/.well-known/http-message-signatures-directory",
+    "tdm_policy": "https://example.com/.well-known/tdmrep.json"
+  },
+  "interop": {
+    "emit": [
+      "robots-txt",
+      "aipref-header",
+      "aipref-robots",
+      "x-robots-tag",
+      "google-extended",
+      "tdmrep"
+    ]
+  }
+}

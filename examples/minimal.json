@@ -1,0 +1,25 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "My Blog",
+    "contact": "mailto:me@example.com"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "deny"
+      },
+      "ai-input": {
+        "state": "deny"
+      }
+    }
+  }
+}

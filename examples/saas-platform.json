@@ -1,0 +1,108 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Acme Cloud Platform",
+    "url": "https://acmecloud.example.com",
+    "contact": "mailto:partnerships@acmecloud.example.com",
+    "jurisdictions": [
+      "US"
+    ]
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "deny",
+      "unknown_identity": "deny"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "deny"
+      },
+      "ai-input": {
+        "state": "deny"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/docs/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "conditional",
+          "conditions": {
+            "attribution_required": true
+          }
+        },
+        "search": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "allow"
+        },
+        "embedding": {
+          "state": "allow"
+        },
+        "transform": {
+          "state": "conditional",
+          "conditions": {
+            "citation_required": true,
+            "link_required": true
+          }
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/app/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        },
+        "search": {
+          "state": "deny"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "deny"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/changelog/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        },
+        "search": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "allow"
+        }
+      }
+    }
+  ],
+  "interop": {
+    "emit": [
+      "robots-txt",
+      "aipref-header"
+    ]
+  }
+}

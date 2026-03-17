@@ -1,0 +1,21 @@
+name = "consent-txt"
+main = "index.js"
+compatibility_date = "2026-03-01"
+
+# Dry-run mode: logs enforcement decisions without blocking/charging.
+# Set to "true" for testing, remove or set "false" for production.
+# [vars]
+# DRY_RUN = "true"
+
+# Option 1: Store manifest in KV (recommended for larger manifests)
+# [[kv_namespaces]]
+# binding = "CONSENT_MANIFEST_KV"
+# id = "<your-kv-namespace-id>"
+
+# Option 2: Inline the manifest as an environment variable
+# [vars]
+# CONSENT_MANIFEST = '{"version":"0.1","publisher":{"name":"My Site","contact":"mailto:me@example.com"},"defaults":{"standard":{"train-ai":{"state":"deny"},"search":{"state":"allow"}}}}'
+
+# Option 3: Fetch from origin
+# [vars]
+# MANIFEST_ORIGIN_URL = "https://example.com/.well-known/consent-manifest.json"

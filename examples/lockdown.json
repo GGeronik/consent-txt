@@ -1,0 +1,55 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Protected Content Inc.",
+    "url": "https://protected.example.com",
+    "contact": "mailto:legal@protected.example.com",
+    "jurisdictions": [
+      "US"
+    ],
+    "terms_url": "https://protected.example.com/terms"
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "deny",
+      "unknown_identity": "deny"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "deny"
+      },
+      "ai-input": {
+        "state": "deny"
+      },
+      "agentic-access": {
+        "state": "deny"
+      },
+      "transform": {
+        "state": "deny"
+      },
+      "generate-media": {
+        "state": "deny"
+      },
+      "embedding": {
+        "state": "deny"
+      }
+    }
+  },
+  "interop": {
+    "emit": [
+      "robots-txt",
+      "aipref-header",
+      "aipref-robots",
+      "x-robots-tag",
+      "google-extended"
+    ]
+  }
+}

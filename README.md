@@ -456,7 +456,7 @@ consent.txt is an open standard. Contributions welcome.
 
 ## Author
 
-**George Geronikolas** — AI Researcher, Webroot.AI
+**George Geronik** — AI Researcher, Webroot.AI
 
 - GitHub: [@GGeronik](https://github.com/GGeronik)
 - Also: [God Clause](https://github.com/GGeronik/God_Clause) — AI governance framework

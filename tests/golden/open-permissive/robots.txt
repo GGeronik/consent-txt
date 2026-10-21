@@ -1,0 +1,9 @@
+# robots.txt
+# Generated from consent-manifest.json by consent.txt compiler v0.2
+# Agents table: 2026-10-22
+# Publisher: OpenData Research Lab
+
+User-Agent: *
+Allow: /
+
+Sitemap: https://opendata.example.edu/sitemap.xml

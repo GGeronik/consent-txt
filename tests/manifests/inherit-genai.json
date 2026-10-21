@@ -1,0 +1,35 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "deny"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/open/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "allow"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# search differs by path, so set the header per path (the longest matching path wins):
+#   /changelog/: no noindex
+#   /docs/: no noindex
+#   /app/: X-Robots-Tag: noindex, nofollow (robots.txt disallows this path, so crawlers never read the header)
+#   /: no noindex
+X-Robots-Tag: googlebot: noai, noimageai

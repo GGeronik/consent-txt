@@ -1,0 +1,6 @@
+# Content Signals (contentsignals.org) apply to the whole site, so labels that a path rule overrides are left out.
+# robots.txt: add this line inside the 'User-Agent: *' group.
+Content-Signal: search=no, ai-train=no
+
+# HTTP response header with the same value (Cloudflare's Markdown for Agents keeps an origin header):
+Content-Signal: search=no, ai-train=no

@@ -1,0 +1,66 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "deny",
+      "unknown_identity": "deny"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "ai-input": {
+        "state": "deny"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/docs/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "allow"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "allow"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/docs/private/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "deny"
+        }
+      }
+    }
+  ],
+  "interop": {
+    "emit": [
+      "robots-txt",
+      "aipref-robots",
+      "tdmrep"
+    ]
+  }
+}

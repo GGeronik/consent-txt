@@ -1,0 +1,14 @@
+[
+  {
+    "location": "/members/public/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/members/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 0
+  }
+]

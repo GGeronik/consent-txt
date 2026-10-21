@@ -1,0 +1,17 @@
+[
+  {
+    "location": "/press-releases/",
+    "tdm-reservation": 1,
+    "tdm-policy": "https://example.com/tdm/policy.json"
+  },
+  {
+    "location": "/premium/",
+    "tdm-reservation": 1,
+    "tdm-policy": "https://example.com/tdm/policy.json"
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 1,
+    "tdm-policy": "https://example.com/tdm/policy.json"
+  }
+]

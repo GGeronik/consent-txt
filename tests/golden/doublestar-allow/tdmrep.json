@@ -1,0 +1,18 @@
+[
+  {
+    "location": "/docs/*/public/",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/docs/public/",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/docs/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 0
+  }
+]

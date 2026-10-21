@@ -55,11 +55,7 @@
   "rules": [
     {
       "match": {
-        "path": "/premium/*",
-        "content_types": [
-          "text/html",
-          "application/pdf"
-        ]
+        "path": "/premium/*"
       },
       "standard": {
         "train-ai": {
@@ -118,7 +114,7 @@
     "payment": "https://example.com/.well-known/ai-payment",
     "receipts": "https://example.com/.well-known/ai-receipts",
     "verification": "https://example.com/.well-known/http-message-signatures-directory",
-    "tdm_policy": "https://example.com/.well-known/tdmrep.json"
+    "tdm_policy": "https://example.com/tdm/policy.json"
   },
   "interop": {
     "emit": [
@@ -127,7 +123,8 @@
       "aipref-robots",
       "x-robots-tag",
       "google-extended",
-      "tdmrep"
+      "tdmrep",
+      "content-signal"
     ]
   }
 }

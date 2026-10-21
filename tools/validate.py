@@ -2,15 +2,17 @@
 """
 consent.txt — Consent Manifest Validator v0.1
 
-Validates a consent-manifest.json against the v0.1 specification.
+Validates consent-manifest.json files against the v0.1 specification.
 Zero external dependencies.
 
 Usage:
-    python validate.py manifest.json
+    python validate.py manifest.json [more.json ...]
     python validate.py https://example.com/.well-known/consent-manifest.json
 """
 
+import argparse
 import json
+import re
 import sys
 
 VALID_STATES = {"allow", "deny", "unknown", "charge", "conditional"}
@@ -24,6 +26,7 @@ KNOWN_EXPERIMENTAL = {"train-genai", "ai-input", "agentic-access", "transform", 
 VALID_EMIT_TARGETS = {
     "robots-txt", "aipref-header", "aipref-robots",
     "x-robots-tag", "google-extended", "tdmrep",
+    "content-signal", "summary",
 }
 CONDITION_FIELDS = {
     "identity", "citation_required", "link_required", "attribution_required",
@@ -31,6 +34,15 @@ CONDITION_FIELDS = {
     "freshness_delay_seconds", "rate_limit_per_day", "region_scope",
     "payment_plan",
 }
+MATCH_KEYS = {"path", "hostname", "content_types", "languages", "labels"}
+CONTROL_CHARS = re.compile("[\x00-\x1f\x7f-\x9f\u2028\u2029]")  # C0, DEL, C1 (incl. NEL) and the Unicode line separators
+URL_RE = re.compile(r"^https?://[^\s\"'<>]+$")
+BAD_PATH_CHARS = re.compile(r"[\s#?\[\]]")
+MAX_DOUBLESTAR = 4  # same limit as compiler/compile.py, since each '/**/' doubles the compiled patterns
+
+
+def _fmt(values):
+    return ", ".join(sorted(values))
 
 
 def validate(data):
@@ -48,7 +60,7 @@ def validate(data):
     if "version" not in data:
         err("Missing required field: 'version'.")
     elif data["version"] != "0.1":
-        err(f"version must be '0.1', got '{data['version']}'.")
+        err(f"version must be '0.1', got {data['version']!r}.")
 
     # publisher
     if "publisher" not in data:
@@ -58,15 +70,20 @@ def validate(data):
         if not isinstance(pub, dict):
             err("publisher must be an object.")
         else:
-            if "name" not in pub or not pub.get("name", "").strip():
-                err("publisher.name is required and must be non-empty.")
-            if "contact" not in pub or not pub.get("contact", "").strip():
-                err("publisher.contact is required and must be non-empty.")
-            if "url" in pub and not pub["url"].startswith("https://"):
-                warn("publisher.url should use HTTPS.")
-            if "jurisdictions" in pub:
-                if not isinstance(pub["jurisdictions"], list):
-                    err("publisher.jurisdictions must be an array.")
+            for key in ("name", "contact"):
+                if not isinstance(pub.get(key), str) or not pub[key].strip():
+                    err(f"publisher.{key} is required and must be a non-empty string.")
+            if "url" in pub:
+                if not isinstance(pub["url"], str):
+                    err("publisher.url must be a string.")
+                elif not pub["url"].startswith("https://"):
+                    warn("publisher.url should use HTTPS.")
+            if "jurisdictions" in pub and (not isinstance(pub["jurisdictions"], list)
+                                           or not all(isinstance(j, str) for j in pub["jurisdictions"])):
+                err("publisher.jurisdictions must be an array of strings.")
+            for key in ("name", "url", "contact", "terms_url"):
+                if isinstance(pub.get(key), str) and CONTROL_CHARS.search(pub[key]):
+                    err(f"publisher.{key}: control characters are not allowed (they would be copied into robots.txt or headers).")
 
     # defaults
     if "defaults" not in data:
@@ -88,10 +105,7 @@ def validate(data):
                     err(f"{label}: missing required field 'match'.")
                 else:
                     validate_match(rule["match"], f"{label}.match", errors, warnings)
-                if "standard" in rule:
-                    validate_standard_policies(rule["standard"], f"{label}.standard", errors, warnings)
-                if "experimental" in rule:
-                    validate_experimental_policies(rule["experimental"], f"{label}.experimental", errors, warnings)
+                validate_policy_block(rule, label, errors, warnings, allow_fallbacks=False)
 
     # endpoints
     if "endpoints" in data:
@@ -99,8 +113,8 @@ def validate(data):
             err("endpoints must be an object.")
         else:
             for key, val in data["endpoints"].items():
-                if not isinstance(val, str):
-                    err(f"endpoints.{key}: must be a URI string.")
+                if not isinstance(val, str) or not URL_RE.match(val) or CONTROL_CHARS.search(val):
+                    err(f"endpoints.{key}: must be an absolute http(s) URL without spaces, quotes or angle brackets.")
 
     # interop
     if "interop" in data:
@@ -112,8 +126,10 @@ def validate(data):
                 err("interop.emit must be an array.")
             else:
                 for target in interop["emit"]:
-                    if target not in VALID_EMIT_TARGETS:
-                        warn(f"interop.emit: unrecognized target '{target}'.")
+                    if not isinstance(target, str):
+                        err("interop.emit: entries must be strings.")
+                    elif target not in VALID_EMIT_TARGETS:
+                        warn(f"interop.emit: unknown target '{target}' (valid: {_fmt(VALID_EMIT_TARGETS)}).")
 
     # Semantic checks
     check_semantics(data, warnings)
@@ -127,24 +143,33 @@ def validate(data):
     return errors, warnings
 
 
-def validate_policy_block(block, label, errors, warnings):
+def validate_policy_block(block, label, errors, warnings, allow_fallbacks=True):
     if not isinstance(block, dict):
         errors.append(f"{label}: must be an object.")
         return
 
     if "fallbacks" in block:
         fb = block["fallbacks"]
-        if isinstance(fb, dict):
+        if not allow_fallbacks:
+            warnings.append(f"{label}.fallbacks: ignored, because fallbacks are only read from defaults.")
+        elif isinstance(fb, dict):
             for key in ("unexpressible_state", "unknown_identity"):
-                if key in fb and fb[key] not in VALID_FALLBACK_STATES:
-                    errors.append(f"{label}.fallbacks.{key}: must be one of {VALID_FALLBACK_STATES}.")
+                if key in fb and not (isinstance(fb[key], str) and fb[key] in VALID_FALLBACK_STATES):
+                    errors.append(f"{label}.fallbacks.{key}: must be one of {_fmt(VALID_FALLBACK_STATES)}.")
         else:
             errors.append(f"{label}.fallbacks: must be an object.")
 
+    std = block.get("standard")
+    exp = block.get("experimental")
     if "standard" in block:
-        validate_standard_policies(block["standard"], f"{label}.standard", errors, warnings)
+        validate_standard_policies(std, f"{label}.standard", errors, warnings)
     if "experimental" in block:
-        validate_experimental_policies(block["experimental"], f"{label}.experimental", errors, warnings)
+        validate_experimental_policies(exp, f"{label}.experimental", errors, warnings)
+    if isinstance(std, dict) and isinstance(exp, dict):
+        for cat in sorted(set(std) & set(exp)):
+            s, e = std[cat], exp[cat]
+            if isinstance(s, dict) and isinstance(e, dict) and s.get("state") != e.get("state"):
+                errors.append(f"{label}.{cat}: declared in both standard and experimental with different states.")
 
 
 def validate_standard_policies(std, label, errors, warnings):
@@ -153,7 +178,7 @@ def validate_standard_policies(std, label, errors, warnings):
         return
     for cat, val in std.items():
         if cat not in STANDARD_CATEGORIES:
-            errors.append(f"{label}.{cat}: not a recognized standard category. Valid: {STANDARD_CATEGORIES}.")
+            errors.append(f"{label}.{cat}: not a recognized standard category. Valid: {_fmt(STANDARD_CATEGORIES)}.")
         validate_policy_value(val, f"{label}.{cat}", errors, warnings)
 
 
@@ -164,6 +189,9 @@ def validate_experimental_policies(exp, label, errors, warnings):
     for cat, val in exp.items():
         if cat in STANDARD_CATEGORIES:
             warnings.append(f"{label}.{cat}: this is a standard category — move it to 'standard'.")
+        elif cat not in KNOWN_EXPERIMENTAL and not cat.startswith("x-"):
+            warnings.append(f"{label}.{cat}: unknown experimental category (known: "
+                            f"{_fmt(KNOWN_EXPERIMENTAL)}). Custom categories need an 'x-' prefix.")
         validate_policy_value(val, f"{label}.{cat}", errors, warnings)
 
 
@@ -174,11 +202,15 @@ def validate_policy_value(val, label, errors, warnings):
     if "state" not in val:
         errors.append(f"{label}: missing required field 'state'.")
         return
-    if val["state"] not in VALID_STATES:
-        errors.append(f"{label}.state: '{val['state']}' is not valid. Must be one of {VALID_STATES}.")
-
     state = val["state"]
-    has_conditions = "conditions" in val and val["conditions"]
+    if not isinstance(state, str) or state not in VALID_STATES:
+        errors.append(f"{label}.state: {state!r} is not valid. Must be one of {_fmt(VALID_STATES)}.")
+        return
+
+    if "conditions" in val and not isinstance(val["conditions"], dict):
+        errors.append(f"{label}.conditions: must be an object.")
+        return
+    has_conditions = bool(val.get("conditions"))
 
     if state in ("charge", "conditional") and not has_conditions:
         warnings.append(f"{label}: state is '{state}' but no conditions are defined.")
@@ -190,18 +222,14 @@ def validate_policy_value(val, label, errors, warnings):
 
 
 def validate_conditions(cond, label, errors, warnings):
-    if not isinstance(cond, dict):
-        errors.append(f"{label}: must be an object.")
-        return
-
-    if "identity" in cond and cond["identity"] not in VALID_IDENTITY:
-        errors.append(f"{label}.identity: must be one of {VALID_IDENTITY}.")
+    if "identity" in cond and not (isinstance(cond["identity"], str) and cond["identity"] in VALID_IDENTITY):
+        errors.append(f"{label}.identity: must be one of {_fmt(VALID_IDENTITY)}.")
     for bool_field in ("citation_required", "link_required", "attribution_required", "verbatim_allowed"):
         if bool_field in cond and not isinstance(cond[bool_field], bool):
             errors.append(f"{label}.{bool_field}: must be a boolean.")
     for int_field in ("max_excerpt_chars", "max_tokens", "freshness_delay_seconds", "rate_limit_per_day"):
         if int_field in cond:
-            if not isinstance(cond[int_field], int) or cond[int_field] < 0:
+            if not isinstance(cond[int_field], int) or isinstance(cond[int_field], bool) or cond[int_field] < 0:
                 errors.append(f"{label}.{int_field}: must be a non-negative integer.")
     if "region_scope" in cond and not isinstance(cond["region_scope"], list):
         errors.append(f"{label}.region_scope: must be an array.")
@@ -215,43 +243,54 @@ def validate_match(match, label, errors, warnings):
     if not isinstance(match, dict):
         errors.append(f"{label}: must be an object.")
         return
-    if not match:
-        warnings.append(f"{label}: empty match block — this rule matches nothing.")
-    valid_keys = {"path", "hostname", "content_types", "languages", "labels"}
     for key in match:
-        if key not in valid_keys:
+        if key not in MATCH_KEYS:
             warnings.append(f"{label}: unknown match field '{key}'.")
+        elif key != "path":
+            warnings.append(f"{label}.{key}: no emit target compiles this matcher, so the compiler applies "
+                            f"the rule to its whole path and keeps only its denies.")
+    path = match.get("path")
+    if not isinstance(path, str) or not path.startswith("/"):
+        errors.append(f"{label}.path: required, and must be a string starting with '/'.")
+        return
+    if BAD_PATH_CHARS.search(path):
+        errors.append(f"{label}.path: must not contain whitespace, '#', '?' or brackets (RFC 9309 patterns support only '*' and a trailing '$').")
+    if "$" in path[:-1]:
+        errors.append(f"{label}.path: '$' is only allowed at the end of the pattern.")
+    if path.count("/**/") > MAX_DOUBLESTAR:
+        errors.append(f"{label}.path: at most four '/**/' segments are allowed (each one doubles the compiled patterns).")
+    if CONTROL_CHARS.search(path):
+        errors.append(f"{label}.path: control characters are not allowed.")
+
+
+def _states_in(block):
+    out = []
+    if not isinstance(block, dict):
+        return out
+    for tier in ("standard", "experimental"):
+        tier_block = block.get(tier)
+        if isinstance(tier_block, dict):
+            for val in tier_block.values():
+                if isinstance(val, dict) and isinstance(val.get("state"), str):
+                    out.append(val["state"])
+    return out
 
 
 def check_semantics(data, warnings):
     defaults = data.get("defaults", {})
-    # Check: charge/conditional in standard but no fallbacks defined
-    has_rich = False
-    for cat, val in defaults.get("standard", {}).items():
-        if isinstance(val, dict) and val.get("state") in ("charge", "conditional"):
-            has_rich = True
-            break
-    if not has_rich:
-        for cat, val in defaults.get("experimental", {}).items():
-            if isinstance(val, dict) and val.get("state") in ("charge", "conditional"):
-                has_rich = True
-                break
-    if has_rich and "fallbacks" not in defaults:
+    rules = data.get("rules", []) if isinstance(data.get("rules"), list) else []
+    rich = {"charge", "conditional"}
+
+    if any(s in rich for s in _states_in(defaults)) and isinstance(defaults, dict) and "fallbacks" not in defaults:
         warnings.append(
             "defaults: manifest uses 'charge' or 'conditional' states but no "
             "fallbacks are defined. Compilers will not know how to lower these "
             "to surfaces that only support allow/deny."
         )
 
-    # Check: charge state but no payment endpoint
-    has_charge = False
-    for block in [defaults] + [r for r in data.get("rules", [])]:
-        for tier in ("standard", "experimental"):
-            for cat, val in block.get(tier, {}).items():
-                if isinstance(val, dict) and val.get("state") == "charge":
-                    has_charge = True
-                    break
-    if has_charge and "payment" not in data.get("endpoints", {}):
+    has_charge = any("charge" in _states_in(block) for block in [defaults] + rules)
+    endpoints = data.get("endpoints") if isinstance(data.get("endpoints"), dict) else {}
+    if has_charge and "payment" not in endpoints:
         warnings.append("Manifest uses 'charge' state but no endpoints.payment is defined.")
 
 
@@ -261,26 +300,11 @@ def load_file(path_or_url):
         with urllib.request.urlopen(path_or_url, timeout=10) as resp:
             return json.loads(resp.read().decode())
     else:
-        with open(path_or_url, "r") as f:
+        with open(path_or_url, "r", encoding="utf-8") as f:
             return json.load(f)
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python validate.py <manifest.json or URL>")
-        sys.exit(1)
-
-    target = sys.argv[1]
-    try:
-        data = load_file(target)
-    except json.JSONDecodeError as e:
-        print(f"\nFAIL: Invalid JSON — {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\nFAIL: Could not load — {e}")
-        sys.exit(1)
-
-    errors, warnings = validate(data)
+def report(target, data, errors, warnings):
     is_valid = len(errors) == 0
 
     print(f"\n{'='*60}")
@@ -303,25 +327,50 @@ def main():
             print(f"    {i}. {w}")
         print()
 
-    # Summary
-    pub = data.get("publisher", {}) if isinstance(data, dict) else {}
-    defs = data.get("defaults", {}) if isinstance(data, dict) else {}
-    std = defs.get("standard", {})
-    exp = defs.get("experimental", {})
-    emit = data.get("interop", {}).get("emit", []) if isinstance(data, dict) else []
+    if not isinstance(data, dict):
+        return is_valid
+    pub = data.get("publisher", {}) if isinstance(data.get("publisher"), dict) else {}
+    defs = data.get("defaults", {}) if isinstance(data.get("defaults"), dict) else {}
+    std = defs.get("standard", {}) if isinstance(defs.get("standard"), dict) else {}
+    exp = defs.get("experimental", {}) if isinstance(defs.get("experimental"), dict) else {}
+    interop = data.get("interop", {}) if isinstance(data.get("interop"), dict) else {}
+    emit = interop.get("emit", []) if isinstance(interop.get("emit"), list) else []
+    rules = data.get("rules", []) if isinstance(data.get("rules"), list) else []
 
     print(f"  Publisher:     {pub.get('name', 'N/A')}")
     print(f"  Contact:       {pub.get('contact', 'N/A')}")
-    print(f"  Jurisdictions: {', '.join(pub.get('jurisdictions', [])) or 'N/A'}")
-    std_summary = ", ".join(k + "=" + v.get("state", "?") for k, v in std.items() if isinstance(v, dict))
-    exp_summary = ", ".join(k + "=" + v.get("state", "?") for k, v in exp.items() if isinstance(v, dict))
+    print(f"  Jurisdictions: {', '.join(map(str, pub.get('jurisdictions', []))) if isinstance(pub.get('jurisdictions'), list) else 'N/A'}")
+    std_summary = ", ".join(k + "=" + str(v.get("state", "?")) for k, v in std.items() if isinstance(v, dict))
+    exp_summary = ", ".join(k + "=" + str(v.get("state", "?")) for k, v in exp.items() if isinstance(v, dict))
     print(f"  Standard:      {std_summary or 'None'}")
     print(f"  Experimental:  {exp_summary or 'None'}")
-    print(f"  Rules:         {len(data.get('rules', []))} path-specific rule(s)")
-    print(f"  Emit targets:  {', '.join(emit) or 'None specified'}")
+    print(f"  Rules:         {len(rules)} path-specific rule(s)")
+    print(f"  Emit targets:  {', '.join(map(str, emit)) or 'None specified'}")
     print()
+    return is_valid
 
-    sys.exit(0 if is_valid else 1)
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Validate consent-manifest.json files against the v0.1 specification.")
+    parser.add_argument("targets", nargs="+", help="File path(s) or URL(s)")
+    args = parser.parse_args(argv)
+
+    all_valid = True
+    for target in args.targets:
+        try:
+            data = load_file(target)
+        except json.JSONDecodeError as e:
+            print(f"\nFAIL: {target}: invalid JSON ({e})")
+            all_valid = False
+            continue
+        except Exception as e:
+            print(f"\nFAIL: {target}: could not load ({e})")
+            all_valid = False
+            continue
+        errors, warnings = validate(data)
+        if not report(target, data, errors, warnings):
+            all_valid = False
+    sys.exit(0 if all_valid else 1)
 
 
 if __name__ == "__main__":

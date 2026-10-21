@@ -1,0 +1,4 @@
+# search differs by path, so set the header per path (the longest matching path wins):
+#   /blog/: no noindex
+#   /: X-Robots-Tag: noindex, nofollow
+X-Robots-Tag: googlebot: noai, noimageai

@@ -1,0 +1,22 @@
+============================================================
+  AI Content Policy — Test Site
+============================================================
+
+  Site:          https://test.example
+  Contact:       mailto:ai@test.example
+  Jurisdictions: N/A
+  Terms:         N/A
+
+  Standard (AIPREF-aligned):
+    ✓ train-ai: allow
+    ✓ search: allow
+
+  Path Rules (1):
+    /premium/* → train-ai=charge
+
+  Fallback Behavior:
+    Unexpressible states → unknown
+    Unknown identity     → deny
+
+  Endpoints:
+    payment: https://test.example/pay

@@ -1,0 +1,39 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "unknown"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "allow"
+      },
+      "search": {
+        "state": "allow"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/premium/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "charge",
+          "conditions": {
+            "payment_plan": "p"
+          }
+        }
+      }
+    }
+  ],
+  "endpoints": {
+    "payment": "https://test.example/pay"
+  }
+}

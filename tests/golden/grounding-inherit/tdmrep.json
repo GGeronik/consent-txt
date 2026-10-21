@@ -1,0 +1,14 @@
+[
+  {
+    "location": "/blog/premium/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/blog/",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 1
+  }
+]

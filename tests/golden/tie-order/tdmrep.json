@@ -1,0 +1,14 @@
+[
+  {
+    "location": "/docs/",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/*.pdf",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 1
+  }
+]

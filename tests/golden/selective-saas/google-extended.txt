@@ -1,0 +1,5 @@
+User-Agent: Google-Extended
+Disallow: /docs/enterprise/
+Disallow: /api-reference/
+Disallow: /docs/public/
+Disallow: /

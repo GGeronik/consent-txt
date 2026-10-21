@@ -1,0 +1,54 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "allow"
+      },
+      "search": {
+        "state": "allow"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/*.pdf"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/reports/*",
+        "content_types": [
+          "text/html"
+        ]
+      },
+      "standard": {
+        "train-ai": {
+          "state": "allow"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/**/public/*",
+        "hostname": "pub.test.example"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "allow"
+        }
+      }
+    }
+  ]
+}

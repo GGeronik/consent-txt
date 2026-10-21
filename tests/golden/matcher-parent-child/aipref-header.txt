@@ -1,0 +1,2 @@
+Content-Usage: search=y
+# train-ai omitted because the default is y but /m/x/ is n, /m/ is n, /a/b/ is n, /a/ is n (see aipref-robots.txt for per-path values)

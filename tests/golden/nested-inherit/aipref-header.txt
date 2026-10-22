@@ -1,0 +1,2 @@
+# train-ai omitted because the default is y but /premium/ is n, /premium/archive/ is n (see aipref-robots.txt for per-path values)
+# search omitted because the default is y but /premium/archive/ is n (see aipref-robots.txt for per-path values)

@@ -1,0 +1,18 @@
+[
+  {
+    "location": "/docs/enterprise/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/api-reference/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/docs/public/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 1
+  }
+]

@@ -1,0 +1,14 @@
+============================================================
+  AI Content Policy — Test Site
+============================================================
+
+  Site:          https://test.example
+  Contact:       mailto:ai@test.example
+  Jurisdictions: N/A
+  Terms:         N/A
+
+  Standard (AIPREF-aligned):
+
+  Fallback Behavior:
+    Unexpressible states → deny
+    Unknown identity     → deny

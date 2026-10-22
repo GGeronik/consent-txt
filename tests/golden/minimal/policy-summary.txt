@@ -1,0 +1,20 @@
+============================================================
+  AI Content Policy — My Blog
+============================================================
+
+  Site:          N/A
+  Contact:       mailto:me@example.com
+  Jurisdictions: N/A
+  Terms:         N/A
+
+  Standard (AIPREF-aligned):
+    ✗ train-ai: deny
+    ✓ search: allow
+
+  Extended (project-defined):
+    ✗ train-genai: deny
+    ✗ ai-input: deny
+
+  Fallback Behavior:
+    Unexpressible states → deny
+    Unknown identity     → deny

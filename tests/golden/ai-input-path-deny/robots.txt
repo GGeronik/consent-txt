@@ -1,0 +1,22 @@
+# robots.txt
+# Generated from consent-manifest.json by consent.txt compiler v0.2
+# Agents table: 2026-10-22
+# Publisher: Test Site
+
+User-Agent: *
+Allow: /
+
+# Note: Gemini grounding stays open on /premium/, /paid/: ai-input is denied there but training is not, and Google-Extended controls both.
+# User-triggered fetchers: several operators say robots.txt may not apply to these.
+User-Agent: ChatGPT-User
+User-Agent: Claude-User
+User-Agent: Perplexity-User
+User-Agent: MistralAI-User
+User-Agent: DuckAssistBot
+User-Agent: Meta-ExternalFetcher
+User-Agent: Amzn-User
+User-Agent: Google-Agent
+Disallow: /premium/
+Disallow: /paid/
+
+Sitemap: https://test.example/sitemap.xml

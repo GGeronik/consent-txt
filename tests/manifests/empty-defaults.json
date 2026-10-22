@@ -1,0 +1,9 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {}
+}

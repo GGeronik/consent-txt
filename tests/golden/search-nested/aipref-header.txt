@@ -1,0 +1,2 @@
+Content-Usage: train-ai=y
+# search omitted because the default is y but /account/ is n (see aipref-robots.txt for per-path values)

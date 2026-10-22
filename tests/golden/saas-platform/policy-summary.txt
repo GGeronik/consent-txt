@@ -1,0 +1,25 @@
+============================================================
+  AI Content Policy — Acme Cloud Platform
+============================================================
+
+  Site:          https://acmecloud.example.com
+  Contact:       mailto:partnerships@acmecloud.example.com
+  Jurisdictions: US
+  Terms:         N/A
+
+  Standard (AIPREF-aligned):
+    ✗ train-ai: deny
+    ✓ search: allow
+
+  Extended (project-defined):
+    ✗ train-genai: deny
+    ✗ ai-input: deny
+
+  Path Rules (3):
+    /docs/* → train-ai=conditional, search=allow, ai-input=allow, embedding=allow, transform=conditional
+    /app/* → train-ai=deny, search=deny, ai-input=deny
+    /changelog/* → train-ai=deny, search=allow, ai-input=allow
+
+  Fallback Behavior:
+    Unexpressible states → deny
+    Unknown identity     → deny

@@ -1,0 +1,6 @@
+# TDMRep HTTP response headers (W3C TDMRep CG Final Report, section 6.2).
+# Per-path reservations differ, and headers or <meta> tags supersede the file (section 6.7).
+# Serve only /.well-known/tdmrep.json, or set these headers per path:
+#   /members/public/: tdm-reservation: 1
+#   /members/: tdm-reservation: 1
+#   /: tdm-reservation: 0

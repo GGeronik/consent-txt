@@ -1,0 +1,3 @@
+User-Agent: Google-Extended
+Disallow: /members/public/
+Disallow: /members/

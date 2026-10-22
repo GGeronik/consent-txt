@@ -1,0 +1,7 @@
+# TDMRep HTTP response headers (W3C TDMRep CG Final Report, section 6.2).
+tdm-reservation: 1
+tdm-policy: https://example.com/tdm/policy.json
+
+# HTML <head> equivalent (section 6.3):
+<meta name="tdm-reservation" content="1">
+<meta name="tdm-policy" content="https://example.com/tdm/policy.json">

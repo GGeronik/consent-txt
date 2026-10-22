@@ -1,0 +1,5 @@
+User-Agent: Google-Extended
+Disallow: /changelog/
+Disallow: /docs/
+Disallow: /app/
+Disallow: /

@@ -392,7 +392,8 @@ consent.txt/
 │   ├── index.js                  # Cloudflare Worker runtime
 │   └── wrangler.toml             # Deploy config
 ├── scanner/
-│   └── scan.py                   # Domain scanner
+│   ├── scan.py                   # Domain scanner
+│   └── robots_eval.py            # RFC 9309 evaluator, shared with the tests
 ├── playground/
 │   └── index.jsx                 # Zero-install web compiler
 ├── badge/

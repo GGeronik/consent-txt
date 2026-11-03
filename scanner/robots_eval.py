@@ -1,6 +1,6 @@
-"""Minimal RFC 9309 evaluator for tests: groups of consecutive User-Agent lines,
+"""Minimal RFC 9309 evaluator: groups of consecutive User-Agent lines,
 case-insensitive product tokens, '*' wildcard, trailing '$' anchor, longest match
-wins, Allow wins a tie, no match means allowed."""
+wins, Allow wins a tie, no match means allowed. Shared by the scanner and the compiler tests."""
 import re
 
 
@@ -22,6 +22,12 @@ def parse(text):
     return groups
 
 
+def groups_for(groups, agent):
+    """Groups that apply to agent: those naming it, else those naming '*' (RFC 9309 2.2.1)."""
+    agent = agent.lower()
+    return [g for g in groups if agent in g["agents"]] or [g for g in groups if "*" in g["agents"]]
+
+
 def _matches(pattern, path):
     anchored = pattern.endswith("$")
     body = pattern[:-1] if anchored else pattern
@@ -30,11 +36,8 @@ def _matches(pattern, path):
 
 
 def can_fetch(text, agent, path):
-    groups = parse(text)
-    agent = agent.lower()
-    chosen = [g for g in groups if agent in g["agents"]] or [g for g in groups if "*" in g["agents"]]
     best = None  # (length, is_allow)
-    for g in chosen:
+    for g in groups_for(parse(text), agent):
         for kind, pattern in g["rules"]:
             if pattern == "" and kind == "disallow":
                 continue  # empty Disallow allows everything

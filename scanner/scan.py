@@ -3,10 +3,11 @@
 consent.txt — AI Policy Scanner v0.1
 
 Scans a domain for AI content access posture:
-  - robots.txt AI bot rules
-  - AIPREF Content-Usage headers
+  - robots.txt AI bot rules (RFC 9309 groups)
+  - AIPREF Content-Usage header and robots.txt directives
+  - Cloudflare Content-Signal line and header
   - X-Robots-Tag headers
-  - TDMRep declarations
+  - TDMRep: tdm-reservation / tdm-policy headers, tdmrep.json and the <meta> tag
   - Google-Extended controls
   - Consent Manifest presence
 
@@ -26,12 +27,16 @@ Zero external dependencies.
 """
 
 import json
+import os
 import sys
 import re
 import argparse
 import urllib.request
 import urllib.error
 import ssl
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from robots_eval import can_fetch, groups_for, parse  # noqa: E402
 
 # Disable SSL verification warnings for scanning (many sites have cert issues).
 SSL_CTX = ssl.create_default_context()
@@ -75,19 +80,26 @@ def fetch(url, timeout=10):
 
 # ── Scanners ──────────────────────────────────────────────────────────────────
 
+def _directive(text, name):
+    """Value of the first 'name:' line in robots.txt that is not a comment, or None."""
+    m = re.search(rf"(?im)^[ \t]*{name}[ \t]*:(.*)$", text)
+    return (m.group(1).split("#", 1)[0].strip() or None) if m else None
+
+
 def scan_robots_txt(base_url):
-    """Scan robots.txt for AI bot rules."""
+    """Scan robots.txt for AI bot rules, AIPREF directives and the Content-Signal line."""
     url = base_url.rstrip("/") + "/robots.txt"
     status, headers, body = fetch(url)
 
     result = {
-        "found": status == 200 and body.strip(),
+        "found": status == 200 and bool(body.strip()),
         "url": url,
         "bots_blocked": [],
         "bots_allowed": [],
         "bots_unmentioned": [],
         "has_google_extended": False,
         "has_aipref_content_usage": False,
+        "content_signal": None,
         "raw_lines": 0,
     }
 
@@ -95,74 +107,67 @@ def scan_robots_txt(base_url):
         result["bots_unmentioned"] = ALL_AI_BOTS[:]
         return result
 
-    lines = body.lower().splitlines()
-    result["raw_lines"] = len(lines)
-
-    # Parse user-agent groups and their rules.
-    current_agents = []
-    agent_rules = {}
-
-    for line in body.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("#"):
-            continue
-
-        if stripped.lower().startswith("user-agent:"):
-            agent = stripped.split(":", 1)[1].strip()
-            current_agents = [agent]
-            if agent not in agent_rules:
-                agent_rules[agent] = []
-        elif stripped.lower().startswith("disallow:") and current_agents:
-            path = stripped.split(":", 1)[1].strip()
-            for agent in current_agents:
-                agent_rules.setdefault(agent, []).append(("disallow", path))
-        elif stripped.lower().startswith("allow:") and current_agents:
-            path = stripped.split(":", 1)[1].strip()
-            for agent in current_agents:
-                agent_rules.setdefault(agent, []).append(("allow", path))
-        elif stripped.lower().startswith("content-usage:"):
-            result["has_aipref_content_usage"] = True
-
-    # Check each AI bot.
+    result["raw_lines"] = len(body.splitlines())
+    groups = parse(body)
     for bot in ALL_AI_BOTS:
-        rules = agent_rules.get(bot, [])
-        if not rules:
-            # Check wildcard.
-            rules = agent_rules.get("*", [])
-
-        blocked = False
-        for action, path in rules:
-            if action == "disallow" and path == "/":
-                blocked = True
-                break
-
-        if rules and blocked:
-            result["bots_blocked"].append(bot)
-        elif rules and not blocked:
+        if not groups_for(groups, bot):
+            result["bots_unmentioned"].append(bot)
+        elif can_fetch(body, bot, "/"):
             result["bots_allowed"].append(bot)
         else:
-            result["bots_unmentioned"].append(bot)
-
-    if "Google-Extended" in agent_rules:
-        result["has_google_extended"] = True
-
+            result["bots_blocked"].append(bot)
+    result["has_google_extended"] = any("google-extended" in g["agents"] for g in groups)
+    result["has_aipref_content_usage"] = _directive(body, "content-usage") is not None
+    result["content_signal"] = _directive(body, "content-signal")
     return result
 
 
 def scan_headers(base_url):
-    """Scan HTTP response headers for AI-relevant directives."""
+    """Scan the home page response headers for AI-relevant directives, plus the TDMRep surfaces."""
     status, headers, body = fetch(base_url)
 
     result = {
         "reachable": status is not None,
         "status": status,
         "content_usage": headers.get("content-usage"),
+        "content_signal": headers.get("content-signal"),
         "x_robots_tag": headers.get("x-robots-tag"),
-        "link_tdmrep": None,
         "consent_manifest_version": headers.get("x-consent-manifest-version"),
     }
+    result.update(scan_tdmrep(base_url, headers, body))
+    return result
 
-    # Check for TDMRep Link header.
+
+# Any of these means the site declares TDMRep as the W3C protocol defines it.
+TDMREP_KEYS = ("tdm_reservation", "tdm_policy", "tdm_meta", "tdmrep_json")
+
+
+def scan_tdmrep(base_url, headers, body):
+    """TDMRep signals: the tdm-reservation and tdm-policy headers (section 6.2), the <meta> tag
+    (6.3), /.well-known/tdmrep.json (6.4), and the non-standard Link header older consent.txt
+    releases emitted."""
+    result = {
+        "tdm_reservation": headers.get("tdm-reservation"),
+        "tdm_policy": headers.get("tdm-policy"),
+        "tdm_meta": None,
+        "tdmrep_json": None,
+        "link_tdmrep": None,
+    }
+
+    tag = re.search(r'<meta\b[^>]*\bname=["\']tdm-reservation["\'][^>]*>', body, re.I)
+    content = re.search(r'\bcontent=["\']([^"\']*)', tag.group(0), re.I) if tag else None
+    if content:
+        result["tdm_meta"] = content.group(1)
+
+    status, _, body = fetch(base_url.rstrip("/") + "/.well-known/tdmrep.json")
+    if status == 200:
+        try:
+            entries = json.loads(body)
+        except json.JSONDecodeError:
+            entries = None
+        if isinstance(entries, list) and all(isinstance(e, dict) and "tdm-reservation" in e for e in entries):
+            result["tdmrep_json"] = len(entries)
+
     link_header = headers.get("link", "")
     if "tdm-policy" in link_header.lower():
         result["link_tdmrep"] = link_header
@@ -253,14 +258,18 @@ def score(robots, headers, manifest, alt_files):
         usage_score += 40  # Has AIPREF header
     if robots.get("has_aipref_content_usage"):
         usage_score += 20  # AIPREF in robots.txt
+    if headers.get("content_signal") or robots.get("content_signal"):
+        usage_score += 10  # Cloudflare Content Signals
     if manifest["found"]:
         usage_score += 25  # Has consent manifest
         if manifest["has_fallbacks"]:
             usage_score += 10
         if manifest["has_interop"]:
             usage_score += 5
-    if headers.get("link_tdmrep"):
-        usage_score += 15  # TDMRep
+    if any(headers.get(k) for k in TDMREP_KEYS):
+        usage_score += 15  # TDMRep headers, tdmrep.json or <meta> tag
+    elif headers.get("link_tdmrep"):
+        usage_score += 5  # the non-standard Link header older consent.txt releases emitted
 
     # Axis 3: Preview Controls
     preview_score = 0
@@ -341,14 +350,24 @@ def generate_report(domain, robots, headers, manifest, alt_files, scores):
         ln(f"    AI bots unmentioned: {len(robots['bots_unmentioned'])} — {', '.join(robots['bots_unmentioned'][:6])}{'...' if len(robots['bots_unmentioned']) > 6 else ''}")
         ln(f"    Google-Extended:     {'Yes' if robots['has_google_extended'] else 'No'}")
         ln(f"    AIPREF in robots:    {'Yes' if robots['has_aipref_content_usage'] else 'No'}")
+        ln(f"    Content-Signal:      {robots['content_signal'] or 'No'}")
     else:
         ln("    Found: No")
     ln("")
 
     ln("  HTTP HEADERS")
     ln(f"    Content-Usage:          {headers.get('content_usage') or 'Not present'}")
+    ln(f"    Content-Signal:         {headers.get('content_signal') or 'Not present'}")
     ln(f"    X-Robots-Tag:           {headers.get('x_robots_tag') or 'Not present'}")
-    ln(f"    TDMRep Link:            {headers.get('link_tdmrep') or 'Not present'}")
+    ln(f"    tdm-reservation:        {headers.get('tdm_reservation') or 'Not present'}")
+    ln(f"    tdm-policy:             {headers.get('tdm_policy') or 'Not present'}")
+    ln("")
+
+    ln("  TDMREP")
+    ln(f"    tdmrep.json:            {'Found' if headers.get('tdmrep_json') else 'Not found'}")
+    ln(f"    <meta> tag:             {'tdm-reservation=' + headers['tdm_meta'] if headers.get('tdm_meta') else 'Not present'}")
+    if headers.get("link_tdmrep"):
+        ln(f"    Legacy Link header:     {headers['link_tdmrep']}")
     ln("")
 
     ln("  CONSENT MANIFEST")
@@ -382,8 +401,8 @@ def generate_report(domain, robots, headers, manifest, alt_files, scores):
         gaps.append("No AIPREF Content-Usage header. Usage preferences are not expressed in HTTP responses.")
     if not headers.get("x_robots_tag"):
         gaps.append("No X-Robots-Tag header. Search preview controls are not set.")
-    if not headers.get("link_tdmrep"):
-        gaps.append("No TDMRep Link header. EU text/data mining rights are not declared.")
+    if not any(headers.get(k) for k in TDMREP_KEYS):
+        gaps.append("No TDMRep declaration (tdm-reservation header, tdmrep.json or <meta> tag). EU text/data mining rights are not declared.")
     if not manifest["found"]:
         gaps.append("No consent manifest found. No unified AI policy declaration exists.")
     elif not manifest["has_fallbacks"]:
@@ -415,11 +434,17 @@ def generate_json_report(domain, robots, headers, manifest, alt_files, scores):
             "bots_unmentioned": len(robots["bots_unmentioned"]),
             "has_google_extended": robots["has_google_extended"],
             "has_aipref": robots["has_aipref_content_usage"],
+            "content_signal": robots["content_signal"],
         },
         "headers": {
             "content_usage": headers.get("content_usage"),
+            "content_signal": headers.get("content_signal"),
             "x_robots_tag": headers.get("x_robots_tag"),
-            "tdmrep": headers.get("link_tdmrep") is not None,
+            "tdm_reservation": headers.get("tdm_reservation"),
+            "tdm_policy": headers.get("tdm_policy"),
+            "tdm_meta": headers.get("tdm_meta"),
+            "tdmrep_json": headers.get("tdmrep_json"),
+            "tdmrep": any(headers.get(k) for k in TDMREP_KEYS),
         },
         "manifest": {
             "found": manifest["found"],

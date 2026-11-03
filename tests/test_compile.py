@@ -34,7 +34,7 @@ def _load(name, path):
 
 compile_mod = _load("consent_compile", COMPILE_PY)
 validate_mod = _load("consent_validate", VALIDATE_PY)
-robots_eval = _load("robots_eval", os.path.join(ROOT, "tests", "robots_eval.py"))
+robots_eval = _load("robots_eval", os.path.join(ROOT, "scanner", "robots_eval.py"))
 
 
 def read_json(path):

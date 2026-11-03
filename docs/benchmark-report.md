@@ -1,5 +1,7 @@
 # AI Policy Readiness Index: A 20-Domain Sample, March 2026
 
+> Note, 3 November 2026: these scores come from the 0.1 scanner, which recognised TDMRep only through a non-standard `Link` header and read each `User-Agent:` line as its own robots.txt group. Both have since been corrected in `scanner/scan.py`. The sample has not been re-scanned, so the per-domain numbers below predate that fix.
+
 **In our March 2026 sample of 20 domains, the average AI policy readiness score was 25 out of 100. Even the most aggressive blockers fail on three of four axes.**
 
 We scanned 20 domains across news publishers, tech media, SaaS platforms, and open content sites. Each was scored on four axes: access controls (robots.txt coverage), usage declarations (AIPREF headers, TDMRep), preview controls (X-Robots-Tag, snippet directives), and identity confidence (bot-specific rules, verification endpoints).

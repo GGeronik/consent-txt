@@ -121,10 +121,17 @@ def check():
         print(("ok    " if same else "DIFF  ") + rel + note)
     try:
         html, html_headers, _ = fetch(f"{SITE}/")
-        _, md_headers, _ = fetch(f"{SITE}/", "text/markdown")
+    except Exception as e:
+        sys.exit(f"FAIL  {SITE}/ ({e})")
+    md_headers = www = None  # informational lookups: report, never abort
+    try:
+        md_headers = fetch(f"{SITE}/", "text/markdown")[1]
+    except Exception as e:
+        print(f"none  markdown copy ({e})")
+    try:
         www = fetch("https://www.geronik.com/")[2]
     except Exception as e:
-        sys.exit(f"FAIL  {SITE} ({e})")
+        print(f"note  www ({e})")
     expect = (HERE / "headers.txt").read_text().splitlines()
     denies_training = any(l.startswith("X-Robots-Tag:") and "noai" in l for l in expect)
     meta = re.search(r'<meta\s+name="robots"\s+content="([^"]*)"', html, re.I)
@@ -133,11 +140,12 @@ def check():
     print(("ok    " if has_noai == denies_training else "DIFF  ")
           + f"robots meta {'has' if has_noai else 'lacks'} noai, manifest {'denies' if denies_training else 'allows'} training")
     for label, h in (("html", html_headers), ("markdown", md_headers)):  # served only through Cloudflare, informational
-        for line in expect:
+        for line in expect if h is not None else ():
             name, _, value = line.partition(": ")
             got = h.get(name)
             print(("ok    " if got == value else "none  " if got is None else "DIFF  ") + f"{label}: {line}")
-    print(("ok    " if www.startswith(SITE + "/") else "note  ") + f"www -> {www}")
+    if www:
+        print(("ok    " if www.startswith(SITE + "/") else "note  ") + f"www -> {www}")
     sys.exit(0 if ok else 1)
 
 

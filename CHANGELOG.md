@@ -6,8 +6,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The scanner scores TDMRep from the `tdm-reservation` and `tdm-policy` headers, `/.well-known/tdmrep.json` and the `<meta>` tag, which is what the compiler emits. The non-standard `Link: rel="tdm-policy"` header still counts, for a third of the points, so sites on the 0.1 Worker or plugin are not marked as having nothing.
+- The scanner detects the Cloudflare `Content-Signal` line in robots.txt and the matching response header, and awards usage points for either.
+- The scanner parses robots.txt per RFC 9309: consecutive `User-Agent:` lines form one group, tokens match case-insensitively and Allow wins a tie. It uses the evaluator the compiler tests already use, moved to `scanner/robots_eval.py`.
+- The JSON report's `robots.found` is a boolean rather than the file body.
+
 ### Added
 
+- `tests/test_scan.py` covers the scanner, including a scan of the compiler's own output served from a local HTTP server.
 - `sites/geronik.com/`, the deployment of the author's own site: the manifest as the source, a script that compiles the static files Lovable serves and checks the live site against them, and a test that fails when the committed output is stale.
 
 ## [0.2.0] - 2026-11-03

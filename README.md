@@ -418,7 +418,7 @@ consent.txt/
 - [x] 6 example manifests
 - [x] Benchmark report (20 domains)
 
-### v0.1.x — Adoption tools (weeks 2-4)
+### Adoption tools
 
 - [ ] Public hosted scanner at consenttxt.org
 - [ ] AI Policy Readiness Index: benchmark 200+ sites
@@ -426,7 +426,7 @@ consent.txt/
 - [ ] Worker: real IP verification against published bot IP lists
 - [ ] Worker: reverse DNS verification for Googlebot/CCBot/Bingbot
 
-### v0.2 — Monetization layer
+### Monetization layer
 
 consent.txt will not just declare policy — it will route payment.
 
@@ -438,7 +438,7 @@ consent.txt will not just declare policy — it will route payment.
 
 The goal: every `charge` state in a manifest should be enforceable end-to-end. A publisher sets `"ai-input": {"state": "charge", "conditions": {"payment_plan": "premium-rag"}}` and the Worker physically gates the content until the micro-transaction clears.
 
-### v0.3 — Observability layer
+### Observability layer
 
 - [ ] Hosted monitoring: policy change history, enforcement logs, crawler activity
 - [ ] Alerts: notify when a new bot appears, when a bot ignores policy, when crawl volume spikes

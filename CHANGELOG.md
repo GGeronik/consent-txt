@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- `sites/geronik.com/`, the deployment of the author's own site: the manifest as the source, a script that compiles the static files Lovable serves and checks the live site against them, and a test that fails when the committed output is stale.
+
 ## [0.2.0] - 2026-11-03
 
 ### Fixed

@@ -1,0 +1,53 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "George Geronikolopoulos",
+    "url": "https://geronik.com",
+    "contact": "mailto:george@geronik.com",
+    "jurisdictions": [
+      "GR",
+      "GB",
+      "EU"
+    ]
+  },
+  "defaults": {
+    "fallbacks": {
+      "unexpressible_state": "deny",
+      "unknown_identity": "deny"
+    },
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "train-genai": {
+        "state": "deny"
+      },
+      "ai-input": {
+        "state": "allow"
+      },
+      "embedding": {
+        "state": "allow"
+      },
+      "generate-media": {
+        "state": "deny"
+      }
+    }
+  },
+  "interop": {
+    "emit": [
+      "robots-txt",
+      "aipref-header",
+      "aipref-robots",
+      "x-robots-tag",
+      "google-extended",
+      "tdmrep",
+      "content-signal",
+      "summary"
+    ]
+  }
+}

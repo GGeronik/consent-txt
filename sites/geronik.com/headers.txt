@@ -1,0 +1,4 @@
+Content-Usage: train-ai=n, search=y
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+tdm-reservation: 1
+X-Robots-Tag: googlebot: noai, noimageai

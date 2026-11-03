@@ -385,6 +385,7 @@ consent.txt/
 ├── tools/
 │   └── validate.py               # Validator CLI (zero deps)
 ├── tests/                        # Golden-file tests: python -m unittest discover -s tests
+├── sites/geronik.com/            # The author's site: manifest, build and check script, Lovable prompt
 ├── compiler/
 │   ├── compile.py                # Compiler CLI (zero deps)
 │   └── agents.json               # Curated AI user-agent table (train / search / ai-input)

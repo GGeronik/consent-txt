@@ -1,0 +1,2 @@
+Content-Usage: search=y
+# train-ai omitted because the default is y but /*.pdf is n, /*/*.pdf is n, /docs/secret is n, /docs/*/secret is n (see aipref-robots.txt for per-path values)

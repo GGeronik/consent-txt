@@ -1,0 +1,10 @@
+[
+  {
+    "location": "/open/",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 1
+  }
+]

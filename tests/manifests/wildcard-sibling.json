@@ -1,0 +1,50 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "allow"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "ai-input": {
+        "state": "allow"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/m/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "deny"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/*.pdf"
+      },
+      "standard": {
+        "search": {
+          "state": "deny"
+        }
+      }
+    }
+  ]
+}

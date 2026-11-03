@@ -1,0 +1,22 @@
+[
+  {
+    "location": "/drafts*",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/*.pdf$",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/press/",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/about",
+    "tdm-reservation": 0
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 1
+  }
+]

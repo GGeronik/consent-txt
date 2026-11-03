@@ -1,0 +1,3 @@
+X-Robots-Tag: max-snippet:200
+X-Robots-Tag: nosnippet
+X-Robots-Tag: googlebot: noai, noimageai

@@ -1,0 +1,6 @@
+User-Agent: Google-Extended
+Disallow: /drafts*
+Allow: /*.pdf$
+Allow: /press/
+Allow: /about
+Disallow: /

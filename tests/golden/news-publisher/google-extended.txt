@@ -1,0 +1,4 @@
+User-Agent: Google-Extended
+Disallow: /press-releases/
+Disallow: /premium/
+Disallow: /

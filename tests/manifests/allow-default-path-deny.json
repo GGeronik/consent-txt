@@ -1,0 +1,43 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "allow"
+      },
+      "search": {
+        "state": "allow"
+      }
+    },
+    "experimental": {
+      "ai-input": {
+        "state": "allow"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/private/*"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        }
+      },
+      "experimental": {
+        "ai-input": {
+          "state": "deny"
+        }
+      }
+    }
+  ],
+  "endpoints": {
+    "tdm_policy": "https://test.example/tdm/policy.json"
+  }
+}

@@ -1,0 +1,301 @@
+{
+  "format": "consent-txt-agents/1",
+  "updated": "2026-10-22",
+  "notes": [
+    "Curated user-agent table read by compiler/compile.py. Edit it by hand rather than importing ai.robots.txt, whose function field is free text.",
+    "category: 'train' agents are blocked when train-ai or train-genai lowers to deny, and 'ai-input' agents when ai-input lowers to deny (advisory, since several operators say robots.txt may not apply to them). 'search' agents are listed for reference and never get a blocking group of their own, because a site-wide search deny becomes noindex and a path-level one a 'User-Agent: *' Disallow that every crawler obeys.",
+    "respects_robots: what the operator documents. A false value means the operator says robots.txt may not apply (user-triggered fetchers) or the agent is reported to ignore it.",
+    "legacy: a token its operator no longer documents but that is still widely listed, kept so older crawlers stay covered.",
+    "Mixed-use crawlers (Googlebot, Bingbot, Applebot) are left out because blocking them removes the site from search."
+  ],
+  "sources": {
+    "openai": "https://developers.openai.com/api/docs/bots",
+    "anthropic": "https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler",
+    "google": "https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers",
+    "google-agent": "https://developers.google.com/crawling/docs/crawlers-fetchers/google-user-triggered-fetchers",
+    "apple": "https://support.apple.com/en-us/119829",
+    "meta": "https://developers.facebook.com/docs/sharing/webmasters/web-crawlers/",
+    "amazon": "https://developer.amazon.com/amazonbot",
+    "perplexity": "https://docs.perplexity.ai/docs/resources/perplexity-crawlers",
+    "mistral": "https://docs.mistral.ai/robots",
+    "duckduckgo": "https://duckduckgo.com/duckduckgo-help-pages/results/duckassistbot",
+    "commoncrawl": "https://commoncrawl.org/ccbot",
+    "ai2": "https://allenai.org/crawler",
+    "community": "https://github.com/ai-robots-txt/ai.robots.txt/blob/main/robots.json",
+    "diffbot": "https://www.diffbot.com/docs/crawl/faq/robots-txt",
+    "webzio": "https://webz.io/bot.html",
+    "sbintuitions": "https://www.sbintuitions.co.jp/en/bot/"
+  },
+  "agents": [
+    {
+      "token": "GPTBot",
+      "operator": "OpenAI",
+      "category": "train",
+      "respects_robots": true,
+      "source": "openai"
+    },
+    {
+      "token": "ClaudeBot",
+      "operator": "Anthropic",
+      "category": "train",
+      "respects_robots": true,
+      "source": "anthropic"
+    },
+    {
+      "token": "CCBot",
+      "operator": "Common Crawl",
+      "category": "train",
+      "respects_robots": true,
+      "source": "commoncrawl",
+      "note": "open crawl corpus used for training by many parties"
+    },
+    {
+      "token": "Google-Extended",
+      "operator": "Google",
+      "category": "train",
+      "respects_robots": true,
+      "source": "google",
+      "note": "also governs Gemini grounding (ai-input), and Google has no separate ai-input token, so the compiler warns when ai-input is denied but training is allowed"
+    },
+    {
+      "token": "Applebot-Extended",
+      "operator": "Apple",
+      "category": "train",
+      "respects_robots": true,
+      "source": "apple"
+    },
+    {
+      "token": "Meta-ExternalAgent",
+      "operator": "Meta",
+      "category": "train",
+      "respects_robots": true,
+      "source": "meta",
+      "note": "training foundation models and indexing"
+    },
+    {
+      "token": "FacebookBot",
+      "operator": "Meta",
+      "category": "train",
+      "respects_robots": true,
+      "source": "community",
+      "legacy": true,
+      "note": "no longer in Meta's crawler documentation"
+    },
+    {
+      "token": "Amazonbot",
+      "operator": "Amazon",
+      "category": "train",
+      "respects_robots": true,
+      "source": "amazon",
+      "note": "may be used to train Amazon models and also honours page-level noarchive"
+    },
+    {
+      "token": "MistralAI-Training",
+      "operator": "Mistral AI",
+      "category": "train",
+      "respects_robots": true,
+      "source": "mistral"
+    },
+    {
+      "token": "AI2Bot",
+      "operator": "Ai2",
+      "category": "train",
+      "respects_robots": null,
+      "source": "ai2"
+    },
+    {
+      "token": "Ai2Bot-Dolma",
+      "operator": "Ai2",
+      "category": "train",
+      "respects_robots": null,
+      "source": "community",
+      "note": "not on the Ai2 crawler page, only on the community list"
+    },
+    {
+      "token": "cohere-training-data-crawler",
+      "operator": "Cohere",
+      "category": "train",
+      "respects_robots": null,
+      "source": "community"
+    },
+    {
+      "token": "cohere-ai",
+      "operator": "Cohere",
+      "category": "train",
+      "respects_robots": null,
+      "source": "community",
+      "legacy": true,
+      "note": "not documented by its operator, and the community list describes it as prompt-time retrieval"
+    },
+    {
+      "token": "Bytespider",
+      "operator": "ByteDance",
+      "category": "train",
+      "respects_robots": false,
+      "source": "community"
+    },
+    {
+      "token": "TikTokSpider",
+      "operator": "ByteDance",
+      "category": "train",
+      "respects_robots": null,
+      "source": "community"
+    },
+    {
+      "token": "DeepSeekBot",
+      "operator": "DeepSeek",
+      "category": "train",
+      "respects_robots": false,
+      "source": "community"
+    },
+    {
+      "token": "Omgilibot",
+      "operator": "Webz.io",
+      "category": "train",
+      "respects_robots": true,
+      "source": "webzio",
+      "legacy": true
+    },
+    {
+      "token": "omgili",
+      "operator": "Webz.io",
+      "category": "train",
+      "respects_robots": true,
+      "source": "webzio"
+    },
+    {
+      "token": "Webzio-Extended",
+      "operator": "Webz.io",
+      "category": "train",
+      "respects_robots": true,
+      "source": "webzio"
+    },
+    {
+      "token": "SBIntuitionsBot",
+      "operator": "SB Intuitions",
+      "category": "train",
+      "respects_robots": true,
+      "source": "sbintuitions",
+      "note": "used for AI development and information analysis"
+    },
+    {
+      "token": "Diffbot",
+      "operator": "Diffbot",
+      "category": "search",
+      "respects_robots": true,
+      "source": "diffbot",
+      "note": "Diffbot documents it as a general search-engine crawler not used for AI training"
+    },
+    {
+      "token": "OAI-SearchBot",
+      "operator": "OpenAI",
+      "category": "search",
+      "respects_robots": true,
+      "source": "openai"
+    },
+    {
+      "token": "Claude-SearchBot",
+      "operator": "Anthropic",
+      "category": "search",
+      "respects_robots": true,
+      "source": "anthropic"
+    },
+    {
+      "token": "PerplexityBot",
+      "operator": "Perplexity",
+      "category": "search",
+      "respects_robots": true,
+      "source": "perplexity",
+      "note": "search indexing only, and Perplexity says it is not used for training"
+    },
+    {
+      "token": "Amzn-SearchBot",
+      "operator": "Amazon",
+      "category": "search",
+      "respects_robots": true,
+      "source": "amazon"
+    },
+    {
+      "token": "MistralAI-Index",
+      "operator": "Mistral AI",
+      "category": "search",
+      "respects_robots": null,
+      "source": "mistral"
+    },
+    {
+      "token": "SBIntuitions-SearchBot",
+      "operator": "SB Intuitions",
+      "category": "search",
+      "respects_robots": true,
+      "source": "sbintuitions"
+    },
+    {
+      "token": "Meta-WebIndexer",
+      "operator": "Meta",
+      "category": "search",
+      "respects_robots": null,
+      "source": "meta",
+      "note": "Meta AI search result quality"
+    },
+    {
+      "token": "ChatGPT-User",
+      "operator": "OpenAI",
+      "category": "ai-input",
+      "respects_robots": false,
+      "source": "openai",
+      "note": "OpenAI: user-initiated, robots.txt rules may not apply"
+    },
+    {
+      "token": "Claude-User",
+      "operator": "Anthropic",
+      "category": "ai-input",
+      "respects_robots": true,
+      "source": "anthropic"
+    },
+    {
+      "token": "Perplexity-User",
+      "operator": "Perplexity",
+      "category": "ai-input",
+      "respects_robots": false,
+      "source": "perplexity",
+      "note": "Perplexity: generally ignores robots.txt"
+    },
+    {
+      "token": "MistralAI-User",
+      "operator": "Mistral AI",
+      "category": "ai-input",
+      "respects_robots": true,
+      "source": "mistral"
+    },
+    {
+      "token": "DuckAssistBot",
+      "operator": "DuckDuckGo",
+      "category": "ai-input",
+      "respects_robots": true,
+      "source": "duckduckgo"
+    },
+    {
+      "token": "Meta-ExternalFetcher",
+      "operator": "Meta",
+      "category": "ai-input",
+      "respects_robots": false,
+      "source": "meta",
+      "note": "Meta: may bypass robots.txt"
+    },
+    {
+      "token": "Amzn-User",
+      "operator": "Amazon",
+      "category": "ai-input",
+      "respects_robots": false,
+      "source": "amazon"
+    },
+    {
+      "token": "Google-Agent",
+      "operator": "Google",
+      "category": "ai-input",
+      "respects_robots": false,
+      "source": "google-agent",
+      "note": "Google: user-triggered fetchers generally ignore robots.txt"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Acme\nUser-Agent: *\nDisallow: /",
+    "contact": "mailto:a@test.example"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "deny"
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+Content-Usage: train-ai=n
+# search omitted because the default is n but /blog/ is y (see aipref-robots.txt for per-path values)

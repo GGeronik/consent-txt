@@ -1,0 +1,30 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "allow"
+      },
+      "search": {
+        "state": "allow"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/**"
+      },
+      "standard": {
+        "train-ai": {
+          "state": "deny"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "location": "/changelog/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/docs/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/app/",
+    "tdm-reservation": 1
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 1
+  }
+]

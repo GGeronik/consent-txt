@@ -1,0 +1,3 @@
+# search differs by path, so set the header per path (the longest matching path wins):
+#   /premium/archive/: X-Robots-Tag: noindex, nofollow (robots.txt disallows this path, so crawlers never read the header)
+#   /: no noindex

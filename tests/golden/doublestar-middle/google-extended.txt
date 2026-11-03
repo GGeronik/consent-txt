@@ -1,0 +1,5 @@
+User-Agent: Google-Extended
+Disallow: /docs/*/secret
+Disallow: /docs/secret
+Disallow: /*/*.pdf
+Disallow: /*.pdf

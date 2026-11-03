@@ -1,0 +1,33 @@
+============================================================
+  AI Content Policy — Example Media Group
+============================================================
+
+  Site:          https://example.com
+  Contact:       mailto:ai-policy@example.com
+  Jurisdictions: GB, EU
+  Terms:         https://example.com/ai-policy
+
+  Standard (AIPREF-aligned):
+    ✗ train-ai: deny
+    ✓ search: allow
+
+  Extended (project-defined):
+    ✗ train-genai: deny
+    ? ai-input: conditional (citation, link-back, identity=signed, max 160 chars, max 500 tokens)
+    ? agentic-access: conditional (identity=signed, 1000/day)
+    ✗ transform: deny
+    ✗ generate-media: deny
+
+  Path Rules (2):
+    /premium/* → train-ai=deny, search=allow, train-genai=deny, ai-input=charge, transform=deny, generate-media=deny
+    /press-releases/* → train-ai=deny, search=allow, train-genai=deny, ai-input=allow
+
+  Fallback Behavior:
+    Unexpressible states → deny
+    Unknown identity     → deny
+
+  Endpoints:
+    payment: https://example.com/.well-known/ai-payment
+    receipts: https://example.com/.well-known/ai-receipts
+    verification: https://example.com/.well-known/http-message-signatures-directory
+    tdm_policy: https://example.com/tdm/policy.json

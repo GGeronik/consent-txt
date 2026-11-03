@@ -1,0 +1,40 @@
+{
+  "version": "0.1",
+  "publisher": {
+    "name": "Test Site",
+    "url": "https://test.example",
+    "contact": "mailto:ai@test.example"
+  },
+  "defaults": {
+    "standard": {
+      "train-ai": {
+        "state": "allow"
+      },
+      "search": {
+        "state": "deny"
+      }
+    }
+  },
+  "rules": [
+    {
+      "match": {
+        "path": "/blog/*"
+      },
+      "standard": {
+        "search": {
+          "state": "allow"
+        }
+      }
+    },
+    {
+      "match": {
+        "path": "/blog/drafts/*"
+      },
+      "standard": {
+        "search": {
+          "state": "deny"
+        }
+      }
+    }
+  ]
+}

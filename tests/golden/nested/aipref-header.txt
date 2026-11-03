@@ -1,0 +1,2 @@
+Content-Usage: search=y
+# train-ai omitted because the default is n but /docs/ is y (see aipref-robots.txt for per-path values)

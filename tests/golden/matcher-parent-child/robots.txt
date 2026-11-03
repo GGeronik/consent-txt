@@ -1,0 +1,45 @@
+# robots.txt
+# Generated from consent-manifest.json by consent.txt compiler v0.2
+# Agents table: 2026-10-22
+# Publisher: Test Site
+
+User-Agent: *
+Allow: /
+
+User-Agent: GPTBot
+User-Agent: ClaudeBot
+User-Agent: CCBot
+User-Agent: Google-Extended
+User-Agent: Applebot-Extended
+User-Agent: Meta-ExternalAgent
+User-Agent: FacebookBot
+User-Agent: Amazonbot
+User-Agent: MistralAI-Training
+User-Agent: AI2Bot
+User-Agent: Ai2Bot-Dolma
+User-Agent: cohere-training-data-crawler
+User-Agent: cohere-ai
+User-Agent: Bytespider
+User-Agent: TikTokSpider
+User-Agent: DeepSeekBot
+User-Agent: Omgilibot
+User-Agent: omgili
+User-Agent: Webzio-Extended
+User-Agent: SBIntuitionsBot
+Disallow: /a/b/
+Disallow: /m/x/
+Disallow: /a/
+Disallow: /m/
+
+# User-triggered fetchers: several operators say robots.txt may not apply to these.
+User-Agent: ChatGPT-User
+User-Agent: Claude-User
+User-Agent: Perplexity-User
+User-Agent: MistralAI-User
+User-Agent: DuckAssistBot
+User-Agent: Meta-ExternalFetcher
+User-Agent: Amzn-User
+User-Agent: Google-Agent
+Disallow: /m/x/
+
+Sitemap: https://test.example/sitemap.xml

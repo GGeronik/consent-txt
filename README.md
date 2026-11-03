@@ -31,14 +31,14 @@ consent.txt is a **Consent Manifest** — a JSON policy document that acts as a 
                     │  (standard + extended)    │
                     └────────────┬─────────────┘
                                  │
-                         ┌───────▼────────┐
-                         │    Compiler     │  ← python compile.py manifest.json --out build/
-                         └──┬──┬──┬──┬──┬─┘
-                            │  │  │  │  │
-              ┌─────────────┘  │  │  │  └──────────────┐
-              ▼                ▼  ▼  ▼                  ▼
-         robots.txt      AIPREF  X-Robots  Google-     TDMRep
-         (12+ bots)      header    -Tag    Extended    Link hdr
+                         ┌───────▼───────────┐
+                         │     Compiler      │  ← python compile.py manifest.json --out build/
+                         └──┬──┬──┬──┬──┬──┬─┘
+                            │  │  │  │  │  │
+              ┌─────────────┘  │  │  │  │  └──────────────┐
+              ▼                ▼  ▼  ▼  ▼                 ▼
+         robots.txt      AIPREF  X-Robots  Google-  TDMRep     Content-
+         (agents.json)   header    -Tag   Extended json+hdrs    Signal
 ```
 
 ### Enforcement: the Cloudflare Worker
@@ -116,7 +116,9 @@ python compiler/compile.py manifest.json --emit robots-txt --out build/
 
 ### 4. Deploy
 
-Copy the compiled `robots.txt` to your server root. Add the compiled HTTP headers to your server config or CDN. Place the manifest at `/.well-known/consent-manifest.json`.
+Copy the compiled `robots.txt` to your server root and merge the `aipref-robots.txt` and `content-signal.txt` lines into its `User-Agent: *` group. The generated robots.txt already contains Google-Extended, so `google-extended.txt` is only for sites that keep their own robots.txt. Serve `tdmrep.json` at `/.well-known/tdmrep.json`. Add the compiled HTTP headers to your server config or CDN. Headers apply to the whole site, so the compiler leaves out any usage label that a path rule overrides and lists the per-path values as comments, while preview directives such as `max-snippet` come from the default policy only. Place the manifest at `/.well-known/consent-manifest.json`.
+
+The compiler validates the manifest first and exits with code 2 on an invalid one unless you pass `--force`. Path globs are lowered to RFC 9309 patterns (`*` and `$` pass through and `/docs/*` becomes the prefix `/docs/`), and every rule path is emitted so longest-match resolves nested rules.
 
 ## The Five-State Policy Model
 
@@ -143,11 +145,11 @@ These map directly to the IETF AIPREF vocabulary draft:
 | `train-ai` | Model training, fine-tuning, RLHF | AIPREF `Content-Usage`, Google-Extended, robots.txt |
 | `search` | Traditional search indexing | AIPREF `Content-Usage`, meta robots, X-Robots-Tag |
 
-Only standard categories are emitted into AIPREF `Content-Usage` headers.
+Only standard labels are emitted into AIPREF `Content-Usage` headers. A `train-genai` deny still sets the emitted `train-ai` to `n`, because the current AIPREF draft defines `train-ai` as training of generative models.
 
 ### Extended (project-defined)
 
-Higher-resolution categories for enforcement runtimes. These live in the `experimental` block of the manifest and are NOT emitted into AIPREF headers — but the robots.txt compiler reads them for bot-blocking decisions:
+Higher-resolution categories for enforcement runtimes. These live in the `experimental` block of the manifest and their labels are never emitted into AIPREF headers. The compiler reads `train-genai` and `ai-input` for robots.txt groups, TDMRep and Content-Signal, while the other four are declarative only in v0.1:
 
 | Category | What it controls | Provenance |
 |----------|-----------------|------------|
@@ -277,12 +279,13 @@ The compiler can emit:
 
 | Target | Output | Description |
 |--------|--------|-------------|
-| `robots-txt` | `robots.txt` | User-agent groups for 13+ AI crawlers |
-| `aipref-header` | HTTP header | `Content-Usage: train-ai=n, search=y, ai-input=n` |
+| `robots-txt` | `robots.txt` | User-agent groups from the curated table in `compiler/agents.json` |
+| `aipref-header` | HTTP header | `Content-Usage: train-ai=n, search=y` (site-wide, without labels a path rule overrides) |
 | `aipref-robots` | robots.txt rules | AIPREF `Content-Usage` directives in robots.txt |
-| `x-robots-tag` | HTTP header | `max-snippet`, `noai`, `noimageai` directives |
+| `x-robots-tag` | HTTP header | `noindex`, `max-snippet`, `nosnippet`, `noai` directives (site-wide, with per-path differences as comments) |
 | `google-extended` | robots.txt block | Google-Extended specific rules |
-| `tdmrep` | HTTP header | `Link` header referencing TDMRep policy |
+| `tdmrep` | `tdmrep.json` + headers | `/.well-known/tdmrep.json` plus `tdm-reservation` / `tdm-policy` response headers and the `<meta>` equivalent (W3C TDMRep) |
+| `content-signal` | robots.txt line + header | `Content-Signal: search=yes, ai-input=no, ai-train=no` (Cloudflare Content Signals, site-wide) |
 | `summary` | Text file | Human-readable policy summary |
 
 Control which targets are emitted via the manifest's `interop.emit` array or the `--emit` CLI flag.
@@ -306,7 +309,9 @@ Control which targets are emitted via the manifest's `interop.emit` array or the
     },
     "standard": {
       "train-ai": { "state": "deny" },
-      "search": { "state": "allow" },
+      "search": { "state": "allow" }
+    },
+    "experimental": {
       "ai-input": {
         "state": "conditional",
         "conditions": {
@@ -322,9 +327,7 @@ Control which targets are emitted via the manifest's `interop.emit` array or the
   "rules": [
     {
       "match": { "path": "/premium/*" },
-      "standard": {
-        "train-ai": { "state": "deny" },
-        "search": { "state": "allow" },
+      "experimental": {
         "ai-input": {
           "state": "charge",
           "conditions": {
@@ -338,10 +341,10 @@ Control which targets are emitted via the manifest's `interop.emit` array or the
   "endpoints": {
     "payment": "https://example.com/.well-known/ai-payment",
     "verification": "https://example.com/.well-known/http-message-signatures-directory",
-    "tdm_policy": "https://example.com/.well-known/tdmrep.json"
+    "tdm_policy": "https://example.com/tdm/policy.json"
   },
   "interop": {
-    "emit": ["robots-txt", "aipref-header", "x-robots-tag", "google-extended", "tdmrep"]
+    "emit": ["robots-txt", "aipref-header", "x-robots-tag", "google-extended", "tdmrep", "content-signal"]
   }
 }
 ```
@@ -351,7 +354,7 @@ Compile it:
 python compiler/compile.py examples/news-publisher.json --out build/
 ```
 
-Get 7 deployable files. Done.
+This writes the deployable files to `build/`.
 
 ## Design Principles
 
@@ -381,8 +384,10 @@ consent.txt/
 ├── examples/                     # 6 example manifests
 ├── tools/
 │   └── validate.py               # Validator CLI (zero deps)
+├── tests/                        # Golden-file tests: python -m unittest discover -s tests
 ├── compiler/
-│   └── compile.py                # Compiler CLI (zero deps)
+│   ├── compile.py                # Compiler CLI (zero deps)
+│   └── agents.json               # Curated AI user-agent table (train / search / ai-input)
 ├── worker/
 │   ├── index.js                  # Cloudflare Worker runtime
 │   └── wrangler.toml             # Deploy config
@@ -405,7 +410,7 @@ consent.txt/
 - [x] Consent Manifest specification
 - [x] JSON Schema (2 standard + 6 extended categories)
 - [x] Validator CLI
-- [x] Compiler CLI (7 emit targets)
+- [x] Compiler CLI (8 emit targets, golden tests)
 - [x] Cloudflare Worker runtime (trust ladder, dry-run, health/test endpoints)
 - [x] Domain scanner (4-axis AI Policy Readiness scorecard)
 - [x] Badge generator (embeddable SVG for site footers)

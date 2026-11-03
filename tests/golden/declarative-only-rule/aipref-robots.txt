@@ -1,0 +1,6 @@
+# AIPREF Content-Usage rules for robots.txt (draft-ietf-aipref-attach)
+# Generated from consent-manifest.json. Merge these lines into the 'User-Agent: *' group.
+
+User-Agent: *
+Content-Usage: train-ai=y, search=y
+Content-Usage: /*.pdf train-ai=n, search=y

@@ -1,0 +1,24 @@
+============================================================
+  AI Content Policy — Protected Content Inc.
+============================================================
+
+  Site:          https://protected.example.com
+  Contact:       mailto:legal@protected.example.com
+  Jurisdictions: US
+  Terms:         https://protected.example.com/terms
+
+  Standard (AIPREF-aligned):
+    ✗ train-ai: deny
+    ✓ search: allow
+
+  Extended (project-defined):
+    ✗ train-genai: deny
+    ✗ ai-input: deny
+    ✗ agentic-access: deny
+    ✗ transform: deny
+    ✗ generate-media: deny
+    ✗ embedding: deny
+
+  Fallback Behavior:
+    Unexpressible states → deny
+    Unknown identity     → deny

@@ -58,7 +58,7 @@ Therefore, implementations SHOULD compile it into existing mechanisms such as:
 - AIPREF `Content-Usage` rules inside robots.txt;
 - `X-Robots-Tag` and HTML meta robots directives;
 - crawler-specific allow/block rules;
-- TDMRep policy and link surfaces;
+- TDMRep rule file and response headers;
 - payment and verification hooks at the edge.
 
 ### 3.2 Interoperate, do not compete
@@ -166,7 +166,7 @@ The v0.1 core recognizes these standard categories:
 | `train-ai` | Model training, fine-tuning, RLHF | AIPREF `Content-Usage`, Google-Extended, robots.txt |
 | `search` | Traditional search indexing | AIPREF `Content-Usage`, meta robots, X-Robots-Tag |
 
-These two categories are aligned with the IETF AIPREF working group vocabulary (draft-ietf-aipref-vocab). Only standard categories are emitted into AIPREF `Content-Usage` headers and robots.txt rules.
+These two categories are aligned with the IETF AIPREF working group vocabulary (draft-ietf-aipref-vocab-08, a working-group draft that has not yet reached consensus). Only standard labels are emitted into AIPREF `Content-Usage` headers and robots.txt rules. Vocab-08 defines `train-ai` as training of a *generative* model, which is the manifest's `train-genai`, so the compiler emits `train-ai=n` when either `train-ai` or `train-genai` lowers to deny and never emits an experimental label.
 
 ### 6.3 Extended usage categories
 
@@ -179,7 +179,7 @@ Implementations MAY use higher-resolution categories in the experimental block, 
 - `generate-media` — use of the asset in image/audio/video generation workflows;
 - `embedding` — vectorization or semantic indexing for non-search AI use.
 
-Extended categories are authoring conveniences. They MUST NOT be emitted into AIPREF `Content-Usage` headers or other standards-track surfaces. They ARE consumed by the robots.txt compiler (for bot-blocking decisions), edge enforcement runtimes, and commercial agreements.
+Extended categories are authoring conveniences. Their labels MUST NOT be emitted into AIPREF `Content-Usage` headers or other standards-track surfaces, although a `train-genai` deny may set the emitted standard `train-ai` label to `n` (see 6.2). The compiler reads only `train-genai` and `ai-input` (for robots.txt groups, TDMRep and Content-Signal). `agentic-access`, `transform`, `generate-media` and `embedding` have no compiled effect in v0.1.
 
 ### 6.4 Conditions and obligations
 
@@ -213,7 +213,7 @@ An implementation MAY override these defaults explicitly.
 
 ### 6.6 Path specificity
 
-When multiple rules match a request path, the **longest matching path pattern wins**. This follows robots.txt precedent (RFC 9309). Path-specific rules override the default policy for categories they explicitly declare; categories not mentioned in the rule inherit the default policy.
+When multiple rules match a request path, the **longest matching path pattern wins**. This follows robots.txt precedent (RFC 9309), and length is measured on the lowered RFC 9309 pattern (7.3), which is what crawlers compare. A rule declares a category when its state lowers to allow or deny, and for those categories it overrides the policy in force. Every other category, an explicit `unknown` included, is inherited from the longest enclosing prefix rule, then from the defaults. Compilers emit a per-path line only for categories a rule declares or inherits from an enclosing rule, never for values that came from the defaults, so a rule that says nothing about training cannot reopen a training deny carried by an overlapping pattern. Two rules whose paths lower to the same pattern are merged, with later rules winning per category. A rule whose path lowers to `/` overrides the defaults. On equal pattern length, robots.txt and TDMRep readers resolve the tie as allow (RFC 9309) while AIPREF readers take the most restrictive value. Compilers SHOULD warn when two equal-length patterns carry different decisions.
 
 ## 7. Document structure
 
@@ -254,11 +254,8 @@ Fields:
 
 A rule MAY match on:
 
-- `path`: glob pattern
-- `hostname`: for multi-tenant hosts
-- `content_types`: array of MIME types
-- `languages`: array of language codes
-- `labels`: array of content labels
+- `path` (REQUIRED): a path pattern. It MUST start with `/`, MUST NOT contain whitespace, `#`, `?` or brackets, and MAY use `*` (any sequence of characters, across `/`) and a trailing `$` (end anchor). At most four `/**/` segments are allowed in a path, since each one doubles the compiled patterns. Compilers lower it to RFC 9309 patterns. `/x/*` and `/x/**` become the prefix `/x/`, which does not match `/x` itself. A `/**/` in the middle (zero or more whole directories) becomes two patterns with the same policy, `a/b` and `a/*/b`. A pattern without a wildcard is a prefix, so an exact match is written `/about$`.
+- `hostname`, `content_types`, `languages`, `labels`: declared for future targets. No emit target can represent them yet, so a compiler applies such a rule to its whole path, keeps only its `deny` decisions (anything else could relax the policy on part of the path) and warns.
 
 ### 7.4 Endpoints
 
@@ -267,13 +264,13 @@ A rule MAY match on:
 - `payment`: payment flow endpoint
 - `receipts`: audit receipt endpoint
 - `verification`: bot identity verification / public key directory
-- `tdm_policy`: TDMRep policy document
+- `tdm_policy`: absolute URL of a TDMRep policy (an ODRL 2.2 Offer, TDMRep section 7, served as `application/json` or `application/ld+json`), not the `tdmrep.json` rule file
 
 ### 7.5 Interop
 
 `interop.emit` tells compilers which surfaces to emit.
 
-Valid emit targets: `robots-txt`, `aipref-header`, `aipref-robots`, `x-robots-tag`, `google-extended`, `tdmrep`.
+Valid emit targets: `robots-txt`, `aipref-header`, `aipref-robots`, `x-robots-tag`, `google-extended`, `tdmrep`, `content-signal`, `summary`.
 
 ## 8. Compiler profile
 
@@ -281,13 +278,13 @@ A conforming compiler SHOULD be able to emit some or all of the following:
 
 ### 8.1 robots.txt user-agent groups
 
-Emit vendor-specific access groups. Known AI user-agents include: GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, Claude-User, Google-Extended, CCBot, FacebookBot, Bytespider, Diffbot, Amazonbot, cohere-ai, AI2Bot, Applebot-Extended, PerplexityBot.
+Emit vendor-specific access groups. The reference list of agents, with their categories and operator sources, is `compiler/agents.json`. Compilers SHOULD take their user-agent groups from a curated table like it rather than from a hard-coded list.
 
 ### 8.2 AIPREF response headers
 
 For standard categories, emit `Content-Usage` on HTTP responses.
 
-Example: `Content-Usage: train-ai=n, search=y, ai-input=n`
+Example: `Content-Usage: train-ai=n, search=y`
 
 ### 8.3 AIPREF rules in robots.txt
 
@@ -295,11 +292,15 @@ For path-scoped standard categories, emit `Content-Usage` rules within robots.tx
 
 ### 8.4 Search preview controls
 
-Emit preview/index controls where the policy requires snippet or preview restrictions. Outputs: HTML robots meta tags, `X-Robots-Tag`, `data-nosnippet`.
+Emit preview/index controls where the policy requires snippet or preview restrictions. Outputs: HTML robots meta tags, `X-Robots-Tag`, `data-nosnippet`. A site-wide search deny lowers to `noindex`. A path-level search deny lowers to a robots.txt `Disallow`, which blocks crawling but can leave the URL listed without a snippet. Crawlers never read a `noindex` header on a disallowed path.
 
 ### 8.5 TDMRep integration
 
-When relevant, expose or reference machine-readable TDM reservation / licensing resources via `Link` header.
+Emit TDMRep as the W3C TDM Reservation Protocol defines it, as a `/.well-known/tdmrep.json` rule file with the most specific location first. `tdm-reservation` is 1 where training is `charge` or `conditional` or lowers to deny, and 0 where it lowers to allow. Reserved entries carry `tdm-policy` from `endpoints.tdm_policy`. The `tdm-reservation` and `tdm-policy` response headers and `<meta>` tags MUST only be emitted site-wide when every entry shares the same value, because TDMRep section 6.7 lets headers supersede the file.
+
+### 8.5a Content-Signal
+
+Emit a Cloudflare Content Signals line (`Content-Signal: search=yes|no, ai-input=yes|no, ai-train=yes|no`) for the `User-Agent: *` group and as a response header. The format is site-wide, so a label that any rule overrides MUST be omitted rather than emitted with the default value.
 
 ### 8.6 Lowering rules
 
@@ -309,11 +310,11 @@ For standard categories:
 |----------------|------------|
 | `allow` | `y` |
 | `deny` | `n` |
-| `unknown` | omit |
+| `unknown` | omit (an enclosing rule's or the default's value applies) |
 | `charge` | apply fallback (`deny` by default) |
 | `conditional` | apply fallback (`deny` by default) |
 
-Experimental categories SHOULD NOT be emitted into standards-track surfaces. They SHOULD be handled by edge enforcement runtimes, crawler-specific rules, payment gateways, and compliance logic.
+Experimental labels SHOULD NOT be emitted into standards-track surfaces, although a `train-genai` deny sets the emitted `train-ai` to `n` (see 6.2). HTTP headers and Content-Signal are site-wide, so a compiler MUST omit any usage label (`train-ai`, `search`, `ai-input`, `ai-train`, `noindex`) that a path rule overrides instead of emitting the default value, and SHOULD list the per-path values as comments. Preview directives (`max-snippet`, `nosnippet`) come from the default policy's conditions only, and `noai` from the default training decision. Experimental categories are otherwise handled by edge enforcement runtimes, crawler-specific rules, payment gateways and compliance logic.
 
 ## 9. Security and trust considerations
 

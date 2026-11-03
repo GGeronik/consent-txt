@@ -1,0 +1,11 @@
+[
+  {
+    "location": "/private/",
+    "tdm-reservation": 1,
+    "tdm-policy": "https://test.example/tdm/policy.json"
+  },
+  {
+    "location": "/",
+    "tdm-reservation": 0
+  }
+]

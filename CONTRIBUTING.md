@@ -20,10 +20,10 @@ Experimental categories have a lower bar: describe the use case, propose a name,
 
 PRs for new emit targets are welcome. Each target needs:
 
-- A compiler function in `compiler/compile.py`
-- An entry in the `COMPILERS` dict
-- A test showing the output for at least the `news-publisher.json` and `minimal.json` examples
-- Documentation of any lowering rules (how `charge`/`conditional` map to the target surface)
+- A compiler function in `compiler/compile.py` that takes its decisions from the resolved `Plan`, not from the raw manifest
+- An entry in the `COMPILERS` dict, in `VALID_EMIT_TARGETS` in `tools/validate.py`, in SPECIFICATION.md 7.5 and in the README target table
+- Golden outputs regenerated with `UPDATE_GOLDEN=1 python -m unittest discover -s tests`, plus a decision or unit assertion for the new behaviour
+- Documentation of any lowering rules (how `charge`/`conditional` map to the target surface, and what happens to labels a path rule overrides if the surface is site-wide)
 
 Targets we'd particularly like: Nginx config, Caddy config, Apache `.htaccess`, Vercel `vercel.json` headers.
 
@@ -48,7 +48,7 @@ Include: what you did, what you expected, what happened, and the manifest JSON (
 
 ## Code style
 
-Python: no external dependencies in core tools. Standard library only. Run `python tools/validate.py examples/*.json` before submitting.
+Python: no external dependencies in core tools. Standard library only. Run `python -m unittest discover -s tests` before submitting.
 
 JavaScript (Worker): ES modules, no build step, deployable with `wrangler deploy`.
 

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- The playground compiles with the 0.2 rules: the twenty training crawlers and eight user-triggered fetchers from `compiler/agents.json`, a `train-genai` deny counted as a training deny, `charge` and `conditional` lowered to `fallbacks.unexpressible_state`, the `Content-Signal` and `Content-Usage` lines in the `User-Agent: *` group, and TDMRep as `/.well-known/tdmrep.json` with its headers instead of the `Link` header. Path rules are still not compiled there.
+
+### Added
+
+- `tests/test_playground.py` runs the playground's compiler under Node and compares its output for every preset with `compiler/compile.py`.
+
 ## [0.2.1] - 2026-11-03
 
 ### Fixed
